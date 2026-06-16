@@ -1,6 +1,5 @@
 import { NavLink, Outlet } from "react-router-dom";
 import { useData } from "./api.js";
-import Sidebar from "./components/Sidebar.jsx";
 
 function freshness(meta) {
   if (!meta?.updatedAt) return null;
@@ -20,38 +19,15 @@ export default function App() {
         <div className="topbar-inner">
           <NavLink to="/" className="brand">
             <span className="brand-mark">YALLA</span>
-            <span className="brand-sub">SOCCER TV</span>
+            <span className="brand-sub">WORLD CUP</span>
           </NavLink>
-          <nav className="tabs">
-            <NavLink to="/" end className={({ isActive }) => (isActive ? "tab active" : "tab")}>
-              🏆 World Cup
-            </NavLink>
-            <NavLink to="/matches" className={({ isActive }) => (isActive ? "tab active" : "tab")}>
-              Matches
-            </NavLink>
-            <NavLink to="/standings" className={({ isActive }) => (isActive ? "tab active" : "tab")}>
-              Competitions
-            </NavLink>
-            <NavLink to="/scorers" className={({ isActive }) => (isActive ? "tab active" : "tab")}>
-              Scorers
-            </NavLink>
-            <NavLink to="/search" className={({ isActive }) => (isActive ? "tab active" : "tab")}>
-              Search
-            </NavLink>
-            <NavLink to="/favorites" className={({ isActive }) => (isActive ? "tab active" : "tab")}>
-              ★ Favorites
-            </NavLink>
-          </nav>
           <span className="freshness">{freshness(meta)}</span>
         </div>
       </header>
 
-      <div className="layout">
-        <Sidebar />
-        <main className="content">
-          <Outlet />
-        </main>
-      </div>
+      <main className="content content-full">
+        <Outlet />
+      </main>
 
       <footer className="footer">
         Data from API-Football · scores may be delayed a few minutes
