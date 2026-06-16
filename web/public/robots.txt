@@ -1,0 +1,14 @@
+# robots.txt for Yalla — World Cup 2026 Live Scores
+User-agent: *
+Allow: /
+
+# Raw JSON data feeds are not useful in the index
+Disallow: /yallascore/data/
+
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+Sitemap: https://anisrahman-dev.github.io/yallascore/sitemap.xml

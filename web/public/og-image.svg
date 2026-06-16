@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#1b1052"/>
+      <stop offset="0.55" stop-color="#15264f"/>
+      <stop offset="1" stop-color="#0b3b2e"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.5" cy="0" r="0.8">
+      <stop offset="0" stop-color="#ffd700" stop-opacity="0.30"/>
+      <stop offset="1" stop-color="#ffd700" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#ffd700"/>
+      <stop offset="1" stop-color="#ffae00"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <rect width="1200" height="320" fill="url(#glow)"/>
+  <circle cx="600" cy="150" r="6" fill="#e6007e"/>
+  <text x="600" y="170" font-family="Arial, Helvetica, sans-serif" font-size="92" font-weight="900" fill="#ffffff" text-anchor="middle">🏆</text>
+  <text x="600" y="320" font-family="Arial, Helvetica, sans-serif" font-size="84" font-weight="900" fill="#ffffff" text-anchor="middle" letter-spacing="-1">FIFA World Cup <tspan fill="url(#gold)">2026</tspan></text>
+  <text x="600" y="390" font-family="Arial, Helvetica, sans-serif" font-size="30" font-weight="700" fill="#c8cfd8" text-anchor="middle" letter-spacing="6">UNITED STATES · CANADA · MEXICO</text>
+  <g transform="translate(600,470)">
+    <rect x="-340" y="0" width="680" height="64" rx="32" fill="#ffffff" fill-opacity="0.08"/>
+    <text x="0" y="42" font-family="Arial, Helvetica, sans-serif" font-size="28" font-weight="700" fill="#ffffff" text-anchor="middle">Live Scores · Fixtures · Standings · Top Scorers</text>
+  </g>
+  <text x="600" y="585" font-family="Arial, Helvetica, sans-serif" font-size="34" font-weight="900" fill="#ffffff" text-anchor="middle">YALLA <tspan fill="#d50000">LIVE</tspan></text>
+</svg>
