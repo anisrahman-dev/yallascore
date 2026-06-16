@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { getJSON } from "../api.js";
 import { phase, statusLabel, kickoff } from "../util.js";
+import MatchExtras from "../components/MatchExtras.jsx";
 
 export default function MatchDetail() {
   const { id } = useParams();
@@ -121,6 +122,8 @@ export default function MatchDetail() {
           (top leagues / live games) within the free-plan quota. Check back near kickoff.
         </p>
       )}
+
+      <MatchExtras f={match} />
     </div>
   );
 }

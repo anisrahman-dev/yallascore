@@ -18,7 +18,7 @@ export default function Sidebar() {
             const l = byId.get(id);
             return (
               <li key={id}>
-                <Link to="/standings" className="rail-item">
+                <Link to={`/league/${id}`} className="rail-item">
                   {l?.flag || l?.logo ? (
                     <img src={l.flag || l.logo} alt="" loading="lazy" />
                   ) : (

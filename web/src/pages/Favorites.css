@@ -1,0 +1,26 @@
+.fav-empty {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 32px 20px;
+  text-align: center;
+  color: var(--text);
+}
+
+.fav-empty-star {
+  font-size: 40px;
+  line-height: 1;
+  color: #f5b301;
+  margin-bottom: 10px;
+}
+
+.fav-empty-title {
+  font-weight: 700;
+  font-size: 16px;
+  margin: 0 0 4px;
+}
+
+.fav-empty .muted {
+  margin: 0 auto;
+  max-width: 360px;
+}

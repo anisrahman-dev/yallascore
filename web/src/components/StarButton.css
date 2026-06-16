@@ -1,0 +1,33 @@
+.star-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  flex: 0 0 auto;
+  transition: color 0.12s ease, background 0.12s ease;
+}
+
+.star-btn:hover {
+  background: var(--line);
+  color: #c9a227;
+}
+
+.star-btn.active {
+  color: #f5b301; /* gold */
+}
+
+.star-btn:focus-visible {
+  outline: 2px solid var(--link);
+  outline-offset: 1px;
+}
+
+.star-btn svg {
+  display: block;
+}

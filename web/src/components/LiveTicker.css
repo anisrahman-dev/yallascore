@@ -1,0 +1,109 @@
+.liveticker {
+  margin: 8px 0 12px;
+}
+
+.liveticker-scroll {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 2px 0 4px;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  /* hide scrollbar (Firefox / IE) */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+/* hide scrollbar (WebKit) */
+.liveticker-scroll::-webkit-scrollbar {
+  display: none;
+  height: 0;
+  width: 0;
+}
+
+.liveticker-card {
+  flex: 0 0 auto;
+  width: 168px;
+  box-sizing: border-box;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 8px 10px;
+  text-decoration: none;
+  color: var(--text);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.liveticker-card:hover {
+  border-color: var(--line-strong);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+}
+
+.liveticker-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.liveticker-comp {
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
+  border-radius: 2px;
+  flex: 0 0 auto;
+}
+
+.liveticker-min {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--live);
+  letter-spacing: 0.3px;
+  animation: liveticker-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes liveticker-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .liveticker-min {
+    animation: none;
+  }
+  .liveticker-scroll {
+    scroll-behavior: auto;
+  }
+}
+
+.liveticker-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  line-height: 1.5;
+}
+
+.liveticker-team {
+  font-size: 12px;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.liveticker-goal {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text);
+  flex: 0 0 auto;
+  font-variant-numeric: tabular-nums;
+}

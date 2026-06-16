@@ -32,6 +32,12 @@ export default function App() {
             <NavLink to="/scorers" className={({ isActive }) => (isActive ? "tab active" : "tab")}>
               Scorers
             </NavLink>
+            <NavLink to="/search" className={({ isActive }) => (isActive ? "tab active" : "tab")}>
+              Search
+            </NavLink>
+            <NavLink to="/favorites" className={({ isActive }) => (isActive ? "tab active" : "tab")}>
+              ★ Favorites
+            </NavLink>
           </nav>
           <span className="freshness">{freshness(meta)}</span>
         </div>

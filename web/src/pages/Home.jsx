@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { useData } from "../api.js";
 import { groupByLeague, dayLabel, phase } from "../util.js";
 import LeagueGroup from "../components/LeagueGroup.jsx";
+import LiveTicker from "../components/LiveTicker.jsx";
 
 export default function Home() {
   const { data: meta } = useData("meta.json", { refreshMs: 300000 });
@@ -46,6 +47,8 @@ export default function Home() {
         <h1>Football on TV</h1>
         <span className="schedule-date">{fullDate}</span>
       </div>
+
+      <LiveTicker />
 
       <div className="date-nav">
         {dateOptions.map((d) => (

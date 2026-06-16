@@ -1,0 +1,254 @@
+.league-page {
+  display: block;
+}
+
+/* ---- Header ---- */
+.league-hero {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 16px 18px;
+  margin-bottom: 14px;
+}
+.league-hero-logo {
+  width: 54px;
+  height: 54px;
+  object-fit: contain;
+  flex: 0 0 auto;
+}
+.league-hero-ph {
+  background: var(--line);
+  border-radius: 6px;
+}
+.league-hero-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+.league-hero-name {
+  margin: 0;
+  font-size: 20px;
+  line-height: 1.2;
+  color: var(--text);
+}
+.league-hero-country {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--muted);
+}
+.league-hero-country img {
+  width: 18px;
+  height: 13px;
+  object-fit: cover;
+  border-radius: 2px;
+}
+
+/* ---- Sub-tabs ---- */
+.league-tabs {
+  display: flex;
+  gap: 4px;
+  border-bottom: 1px solid var(--line-strong);
+  margin-bottom: 14px;
+}
+.league-tab {
+  appearance: none;
+  background: transparent;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  padding: 10px 14px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--muted);
+  cursor: pointer;
+  margin-bottom: -1px;
+}
+.league-tab:hover {
+  color: var(--text);
+}
+.league-tab.active {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+
+/* ---- Shared card ---- */
+.league-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  overflow: hidden;
+}
+.league-empty {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 24px 18px;
+  text-align: center;
+}
+
+/* ---- Matches tab ---- */
+.league-day {
+  margin-bottom: 16px;
+}
+.league-day-title {
+  margin: 0 0 8px;
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+
+/* ---- Table tab ---- */
+.league-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  overflow: hidden;
+  margin-bottom: 16px;
+  font-size: 14px;
+}
+.league-table th,
+.league-table td {
+  padding: 8px 6px;
+  text-align: center;
+  border-bottom: 1px solid var(--line);
+}
+.league-table thead th {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--muted);
+  background: var(--bg);
+}
+.league-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+.league-table .rank {
+  position: relative;
+  width: 38px;
+  color: var(--muted);
+  padding-left: 12px;
+}
+.league-zone {
+  position: absolute;
+  left: 0;
+  top: 4px;
+  bottom: 4px;
+  width: 3px;
+  border-radius: 2px;
+}
+.league-table .team-col {
+  text-align: left;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text);
+}
+.league-table .team-col img {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+  flex: 0 0 auto;
+}
+.league-table .pts {
+  font-weight: 700;
+  color: var(--text);
+}
+
+/* ---- Scorers tab ---- */
+.league-scorers {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.league-scorer {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--line);
+}
+.league-scorer:last-child {
+  border-bottom: 0;
+}
+.league-scorer-rank {
+  width: 22px;
+  text-align: center;
+  font-weight: 700;
+  color: var(--muted);
+  flex: 0 0 auto;
+}
+.league-scorer-photo {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex: 0 0 auto;
+  background: var(--line);
+}
+.league-scorer-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+.league-scorer-name {
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.league-scorer-team {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.league-scorer-team img {
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
+}
+.league-scorer-stats {
+  display: flex;
+  gap: 16px;
+  flex: 0 0 auto;
+}
+.league-scorer-stats span {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+}
+.league-scorer-stats em {
+  font-style: normal;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+.league-scorer-goals {
+  color: var(--accent) !important;
+}
+
+@media (max-width: 560px) {
+  .league-table .hide-sm {
+    display: none;
+  }
+  .league-scorer-assists {
+    display: none !important;
+  }
+}

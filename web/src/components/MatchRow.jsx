@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { phase, statusLabel, kickoff } from "../util.js";
+import StarButton from "../components/StarButton.jsx";
 
 export default function MatchRow({ f }) {
   const p = phase(f.status);
@@ -34,6 +35,8 @@ export default function MatchRow({ f }) {
           <span className="vs">–</span>
         )}
       </div>
+
+      <StarButton id={f.id} />
     </Link>
   );
 }
