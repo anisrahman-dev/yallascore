@@ -24,7 +24,10 @@ export default function App() {
           </NavLink>
           <nav className="tabs">
             <NavLink to="/" end className={({ isActive }) => (isActive ? "tab active" : "tab")}>
-              Schedules
+              🏆 World Cup
+            </NavLink>
+            <NavLink to="/matches" className={({ isActive }) => (isActive ? "tab active" : "tab")}>
+              Matches
             </NavLink>
             <NavLink to="/standings" className={({ isActive }) => (isActive ? "tab active" : "tab")}>
               Competitions

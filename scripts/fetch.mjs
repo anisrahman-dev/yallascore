@@ -47,6 +47,7 @@ const PRIORITY_LEAGUES = [
 ];
 
 const PRIORITY_SET = new Set(PRIORITY_LEAGUES);
+const WORLD_CUP_ID = 1;
 
 // Stop spending expensive (per-fixture) calls once the daily quota drops here.
 const MIN_REMAINING = 15;
@@ -329,6 +330,27 @@ async function fetchDetails(featured, liveFixtures, reserve = MIN_REMAINING) {
   return done;
 }
 
+// Full World Cup tournament schedule in one call (cheap; the site's centerpiece).
+async function fetchWorldCup(seasonByLeague) {
+  let season = seasonByLeague?.[WORLD_CUP_ID];
+  if (!season) season = (await readData("worldcup.json"))?.season;
+  if (!season) season = new Date().getUTCFullYear();
+  if (!canSpend()) return;
+  await task("worldcup", async () => {
+    const fx = await api("/fixtures", { league: WORLD_CUP_ID, season });
+    const fixtures = fx.map(slimFixture).sort((a, b) => a.timestamp - b.timestamp);
+    const lg = fx[0]?.league;
+    await save("worldcup.json", {
+      updatedAt: new Date().toISOString(),
+      leagueId: WORLD_CUP_ID,
+      season,
+      league: lg ? { id: lg.id, name: lg.name, logo: lg.logo, country: lg.country, flag: lg.flag } : null,
+      count: fixtures.length,
+      fixtures,
+    });
+  });
+}
+
 // Per-team history files for featured teams (one API call each, budget-bounded).
 async function fetchTeams(featured, seasonByLeague) {
   const teams = new Map(); // id -> { team, leagueId }
@@ -383,6 +405,7 @@ async function main() {
     today = todayDoc?.fixtures || [];
     const featured = selectFeatured(today, live);
     await fetchDetails(featured, live, DETAIL_RESERVE);
+    await fetchWorldCup(null);
   } else if (MODE === "daily") {
     seasons = await task("leagues", fetchCurrentLeagues) || {};
     for (const off of [-1, 0, 1]) {
@@ -395,6 +418,7 @@ async function main() {
     const featured = selectFeatured(today, []);
     await fetchDetails(featured, []);
     await fetchTeams(featured, seasons);
+    await fetchWorldCup(seasons);
   } else {
     // "all": everything, quota permitting.
     seasons = await task("leagues", fetchCurrentLeagues) || {};
@@ -408,6 +432,7 @@ async function main() {
     const featured = selectFeatured(today, live);
     await fetchDetails(featured, live);
     await fetchTeams(featured, seasons);
+    await fetchWorldCup(seasons);
   }
 
   const meta = {

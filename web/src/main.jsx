@@ -2,6 +2,7 @@ import React from "react";
 import { createRoot } from "react-dom/client";
 import { HashRouter, Routes, Route } from "react-router-dom";
 import App from "./App.jsx";
+import WorldCup from "./pages/WorldCup.jsx";
 import Home from "./pages/Home.jsx";
 import Standings from "./pages/Standings.jsx";
 import TopScorers from "./pages/TopScorers.jsx";
@@ -17,7 +18,8 @@ createRoot(document.getElementById("root")).render(
     <HashRouter>
       <Routes>
         <Route element={<App />}>
-          <Route index element={<Home />} />
+          <Route index element={<WorldCup />} />
+          <Route path="matches" element={<Home />} />
           <Route path="standings" element={<Standings />} />
           <Route path="scorers" element={<TopScorers />} />
           <Route path="match/:id" element={<MatchDetail />} />
