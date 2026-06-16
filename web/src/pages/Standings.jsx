@@ -3,7 +3,9 @@ import { useData, getJSON } from "../api.js";
 
 export default function Standings() {
   const { data: meta } = useData("meta.json");
+  const { data: leaguesDoc } = useData("leagues.json", { refreshMs: 3600000 });
   const leagueIds = meta?.priorityLeagues || [];
+  const nameById = new Map((leaguesDoc?.leagues || []).map((l) => [l.id, l.name]));
   const [active, setActive] = useState(null);
   const activeId = active ?? leagueIds[0];
 
@@ -32,7 +34,7 @@ export default function Standings() {
             className={id === activeId ? "chip active" : "chip"}
             onClick={() => setActive(id)}
           >
-            {tables[id]?.data?.league?.name || `League ${id}`}
+            {tables[id]?.data?.league?.name || nameById.get(id) || `League ${id}`}
           </button>
         ))}
       </div>
@@ -47,6 +49,12 @@ export default function Standings() {
 
       {!current && <div className="muted">Loading…</div>}
       {current?.error && <div className="muted">No standings available for this league.</div>}
+      {current?.data && groups.length === 0 && (
+        <div className="muted">
+          No table yet for {nameById.get(activeId) || "this competition"} — the season may be
+          between fixtures. It’ll appear after the next data refresh.
+        </div>
+      )}
 
       {groups.map((table, gi) => (
         <table className="standings" key={gi}>

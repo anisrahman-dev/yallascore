@@ -201,18 +201,30 @@ async function fetchFixturesForDate(date) {
   return fixtures;
 }
 
+// Off-season (e.g. June) the "current" season often has an empty table, so
+// fall back to the most recent season that actually has data.
+function seasonCandidates(season) {
+  if (!season) return [];
+  return [season, season - 1, season - 2];
+}
+
 async function fetchStandings(seasonByLeague) {
   for (const leagueId of PRIORITY_LEAGUES) {
     if (!canSpend()) { console.warn(`  standings: quota low (${dailyRemaining}), stopping`); break; }
-    const season = seasonByLeague[leagueId];
-    if (!season) continue;
+    const base = seasonByLeague[leagueId];
+    if (!base) continue;
     await task(`standings ${leagueId}`, async () => {
-      const rows = await api("/standings", { league: leagueId, season });
-      const league = rows[0]?.league;
+      let chosen = base, league = null, standings = [];
+      for (const s of seasonCandidates(base)) {
+        if (!canSpend()) break;
+        const rows = await api("/standings", { league: leagueId, season: s });
+        const lg = rows[0]?.league;
+        if (lg?.standings?.length) { chosen = s; league = lg; standings = lg.standings; break; }
+      }
       await save(`standings-${leagueId}.json`, {
-        updatedAt: new Date().toISOString(), leagueId, season,
+        updatedAt: new Date().toISOString(), leagueId, season: chosen,
         league: league ? { id: league.id, name: league.name, logo: league.logo, country: league.country, flag: league.flag } : null,
-        standings: league?.standings || [],
+        standings,
       });
     });
   }
@@ -221,14 +233,18 @@ async function fetchStandings(seasonByLeague) {
 async function fetchTopScorers(seasonByLeague) {
   for (const leagueId of PRIORITY_LEAGUES) {
     if (!canSpend()) { console.warn(`  topscorers: quota low (${dailyRemaining}), stopping`); break; }
-    const season = seasonByLeague[leagueId];
-    if (!season) continue;
+    const base = seasonByLeague[leagueId];
+    if (!base) continue;
     await task(`topscorers ${leagueId}`, async () => {
-      const rows = await api("/players/topscorers", { league: leagueId, season });
-      if (!rows.length) return; // many leagues have no player coverage
+      let chosen = base, scorers = [];
+      for (const s of seasonCandidates(base)) {
+        if (!canSpend()) break;
+        const rows = await api("/players/topscorers", { league: leagueId, season: s });
+        if (rows.length) { chosen = s; scorers = rows.map(slimScorer); break; }
+      }
+      if (!scorers.length) return; // no player coverage for this league
       await save(`topscorers-${leagueId}.json`, {
-        updatedAt: new Date().toISOString(), leagueId, season,
-        scorers: rows.map(slimScorer),
+        updatedAt: new Date().toISOString(), leagueId, season: chosen, scorers,
       });
     });
   }
