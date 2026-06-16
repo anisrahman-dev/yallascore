@@ -1,0 +1,62 @@
+name: Fetch football data
+
+on:
+  schedule:
+    # Live poll every 15 min during typical match hours (UTC). ~48 calls/day.
+    - cron: "*/15 11-22 * * *"
+    # Full refresh once a day at 06:05 UTC (leagues, fixtures, standings). ~16 calls.
+    - cron: "5 6 * * *"
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "Fetch mode"
+        type: choice
+        default: all
+        options: [all, daily, live]
+
+# Never let two runs push at the same time.
+concurrency:
+  group: fetch-data
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Decide mode
+        id: mode
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "mode=${{ github.event.inputs.mode }}" >> "$GITHUB_OUTPUT"
+          elif [ "${{ github.event.schedule }}" = "5 6 * * *" ]; then
+            echo "mode=all" >> "$GITHUB_OUTPUT"
+          else
+            echo "mode=live" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Fetch
+        env:
+          API_FOOTBALL_KEY: ${{ secrets.API_FOOTBALL_KEY }}
+          MODE: ${{ steps.mode.outputs.mode }}
+        run: node scripts/fetch.mjs
+
+      - name: Commit data if changed
+        run: |
+          git config user.name "data-bot"
+          git config user.email "data-bot@users.noreply.github.com"
+          git add data
+          if git diff --staged --quiet; then
+            echo "No data changes."
+          else
+            git commit -m "data: refresh (${{ steps.mode.outputs.mode }}) [skip ci]"
+            git push
+          fi

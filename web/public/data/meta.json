@@ -1,0 +1,8 @@
+{
+  "updatedAt": "2026-06-16T12:00:00.000Z",
+  "mode": "all",
+  "callsThisRun": 16,
+  "dailyRemaining": 84,
+  "dates": { "yesterday": "2026-06-15", "today": "2026-06-16", "tomorrow": "2026-06-17" },
+  "priorityLeagues": [39, 140, 135, 78, 61, 2, 3, 88, 94, 71, 253, 203]
+}
