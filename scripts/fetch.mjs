@@ -20,6 +20,9 @@ const DATA_DIR = join(__dirname, "..", "data");
 const API_BASE = "https://v3.football.api-sports.io";
 const KEY = process.env.API_FOOTBALL_KEY;
 const MODE = (process.env.MODE || "all").toLowerCase();
+// Full re-fetch of standings/scorers (daily cron has fresh quota). Other runs
+// only fill gaps — skip leagues that already have data — to save quota.
+const FORCE = MODE === "daily" || process.env.REFRESH === "1";
 
 if (!KEY) {
   console.error("ERROR: API_FOOTBALL_KEY env var is not set.");
@@ -219,6 +222,10 @@ async function fetchStandings(seasonByLeague) {
     if (!canSpend()) { console.warn(`  standings: quota low (${dailyRemaining}), stopping`); break; }
     const base = seasonByLeague[leagueId];
     if (!base) continue;
+    if (!FORCE) {
+      const have = await readData(`standings-${leagueId}.json`);
+      if (have?.standings?.length) continue; // already populated — save quota
+    }
     await task(`standings ${leagueId}`, async () => {
       let chosen = base, league = null, standings = [];
       for (const s of seasonCandidates(base)) {
@@ -241,6 +248,10 @@ async function fetchTopScorers(seasonByLeague) {
     if (!canSpend()) { console.warn(`  topscorers: quota low (${dailyRemaining}), stopping`); break; }
     const base = seasonByLeague[leagueId];
     if (!base) continue;
+    if (!FORCE) {
+      const have = await readData(`topscorers-${leagueId}.json`);
+      if (have?.scorers?.length) continue; // already populated — save quota
+    }
     await task(`topscorers ${leagueId}`, async () => {
       let chosen = base, scorers = [];
       for (const s of seasonCandidates(base)) {
