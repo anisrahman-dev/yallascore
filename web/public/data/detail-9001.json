@@ -1,0 +1,34 @@
+{
+  "fixtureId": 9001,
+  "updatedAt": "2026-06-16T12:00:00.000Z",
+  "fixture": {
+    "id": 9001,
+    "date": "2026-06-16T11:30:00+00:00",
+    "timestamp": 1781000000,
+    "status": { "long": "Second Half", "short": "2H", "elapsed": 67 },
+    "venue": "Sample Arena",
+    "league": { "id": 39, "name": "Premier League", "country": "England", "logo": "https://media.api-sports.io/football/leagues/39.png", "flag": "https://media.api-sports.io/flags/gb-eng.svg", "round": "Regular Season - 38" },
+    "teams": {
+      "home": { "id": 50, "name": "Manchester City", "logo": "https://media.api-sports.io/football/teams/50.png", "winner": true },
+      "away": { "id": 40, "name": "Liverpool", "logo": "https://media.api-sports.io/football/teams/40.png", "winner": false }
+    },
+    "goals": { "home": 2, "away": 1 },
+    "score": { "halftime": { "home": 1, "away": 1 }, "fulltime": { "home": null, "away": null }, "extratime": { "home": null, "away": null }, "penalty": { "home": null, "away": null } }
+  },
+  "events": [
+    { "elapsed": 12, "extra": null, "teamId": 50, "team": "Manchester City", "player": "Erling Haaland", "assist": "Kevin De Bruyne", "type": "Goal", "detail": "Normal Goal" },
+    { "elapsed": 34, "extra": null, "teamId": 40, "team": "Liverpool", "player": "Mohamed Salah", "assist": null, "type": "Goal", "detail": "Penalty" },
+    { "elapsed": 41, "extra": null, "teamId": 40, "team": "Liverpool", "player": "Virgil van Dijk", "assist": null, "type": "Card", "detail": "Yellow Card" },
+    { "elapsed": 58, "extra": null, "teamId": 50, "team": "Manchester City", "player": "Phil Foden", "assist": "Haaland", "type": "Goal", "detail": "Normal Goal" },
+    { "elapsed": 62, "extra": null, "teamId": 50, "team": "Manchester City", "player": "Jack Grealish", "assist": "Bernardo Silva", "type": "subst", "detail": "Substitution 1" }
+  ],
+  "statistics": [
+    { "teamId": 50, "team": "Manchester City", "statistics": [ { "type": "Ball Possession", "value": "62%" }, { "type": "Total Shots", "value": 14 }, { "type": "Shots on Goal", "value": 6 }, { "type": "Corner Kicks", "value": 7 }, { "type": "Fouls", "value": 9 } ] },
+    { "teamId": 40, "team": "Liverpool", "statistics": [ { "type": "Ball Possession", "value": "38%" }, { "type": "Total Shots", "value": 8 }, { "type": "Shots on Goal", "value": 3 }, { "type": "Corner Kicks", "value": 3 }, { "type": "Fouls", "value": 12 } ] }
+  ],
+  "lineups": [
+    { "teamId": 50, "team": "Manchester City", "formation": "4-3-3", "coach": "Pep Guardiola", "startXI": [ { "id": 1, "name": "Ederson", "number": 31, "pos": "G" }, { "id": 2, "name": "Kyle Walker", "number": 2, "pos": "D" }, { "id": 3, "name": "Ruben Dias", "number": 3, "pos": "D" }, { "id": 4, "name": "John Stones", "number": 5, "pos": "D" }, { "id": 5, "name": "Josko Gvardiol", "number": 24, "pos": "D" }, { "id": 6, "name": "Rodri", "number": 16, "pos": "M" }, { "id": 7, "name": "Kevin De Bruyne", "number": 17, "pos": "M" }, { "id": 8, "name": "Bernardo Silva", "number": 20, "pos": "M" }, { "id": 9, "name": "Phil Foden", "number": 47, "pos": "F" }, { "id": 10, "name": "Erling Haaland", "number": 9, "pos": "F" }, { "id": 11, "name": "Jeremy Doku", "number": 11, "pos": "F" } ], "substitutes": [] },
+    { "teamId": 40, "team": "Liverpool", "formation": "4-3-3", "coach": "Arne Slot", "startXI": [ { "id": 21, "name": "Alisson", "number": 1, "pos": "G" }, { "id": 22, "name": "Trent Alexander-Arnold", "number": 66, "pos": "D" }, { "id": 23, "name": "Virgil van Dijk", "number": 4, "pos": "D" }, { "id": 24, "name": "Ibrahima Konate", "number": 5, "pos": "D" }, { "id": 25, "name": "Andrew Robertson", "number": 26, "pos": "D" }, { "id": 26, "name": "Alexis Mac Allister", "number": 10, "pos": "M" }, { "id": 27, "name": "Ryan Gravenberch", "number": 38, "pos": "M" }, { "id": 28, "name": "Dominik Szoboszlai", "number": 8, "pos": "M" }, { "id": 29, "name": "Mohamed Salah", "number": 11, "pos": "F" }, { "id": 30, "name": "Luis Diaz", "number": 7, "pos": "F" }, { "id": 31, "name": "Cody Gakpo", "number": 18, "pos": "F" } ], "substitutes": [] }
+  ],
+  "prediction": { "winner": { "name": "Manchester City" }, "advice": "Combo Double chance : Manchester City or draw and -3.5 goals", "percent": { "home": "55%", "draw": "25%", "away": "20%" } }
+}

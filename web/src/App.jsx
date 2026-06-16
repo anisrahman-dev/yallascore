@@ -29,6 +29,9 @@ export default function App() {
             <NavLink to="/standings" className={({ isActive }) => (isActive ? "tab active" : "tab")}>
               Competitions
             </NavLink>
+            <NavLink to="/scorers" className={({ isActive }) => (isActive ? "tab active" : "tab")}>
+              Scorers
+            </NavLink>
           </nav>
           <span className="freshness">{freshness(meta)}</span>
         </div>

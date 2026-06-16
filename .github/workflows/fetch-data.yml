@@ -2,9 +2,11 @@ name: Fetch football data
 
 on:
   schedule:
-    # Live poll every 15 min during typical match hours (UTC). ~48 calls/day.
-    - cron: "*/15 11-22 * * *"
-    # Full refresh once a day at 06:05 UTC (leagues, fixtures, standings). ~16 calls.
+    # Cheap live-score poll every 30 min during match hours (UTC). ~24 calls/day.
+    - cron: "*/30 11-22 * * *"
+    # Featured match detail (events/lineups/stats/predictions) every 2h. Quota-bounded.
+    - cron: "0 12-22/2 * * *"
+    # Full refresh once a day at 06:05 UTC (leagues, fixtures, standings, top scorers).
     - cron: "5 6 * * *"
   workflow_dispatch:
     inputs:
@@ -12,7 +14,7 @@ on:
         description: "Fetch mode"
         type: choice
         default: all
-        options: [all, daily, live]
+        options: [all, daily, live, detail]
 
 # Never let two runs push at the same time.
 concurrency:
@@ -38,7 +40,9 @@ jobs:
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             echo "mode=${{ github.event.inputs.mode }}" >> "$GITHUB_OUTPUT"
           elif [ "${{ github.event.schedule }}" = "5 6 * * *" ]; then
-            echo "mode=all" >> "$GITHUB_OUTPUT"
+            echo "mode=daily" >> "$GITHUB_OUTPUT"
+          elif [ "${{ github.event.schedule }}" = "0 12-22/2 * * *" ]; then
+            echo "mode=detail" >> "$GITHUB_OUTPUT"
           else
             echo "mode=live" >> "$GITHUB_OUTPUT"
           fi
