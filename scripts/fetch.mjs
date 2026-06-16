@@ -47,16 +47,22 @@ const PRIORITY_SET = new Set(PRIORITY_LEAGUES);
 
 // Stop spending expensive (per-fixture) calls once the daily quota drops here.
 const MIN_REMAINING = 15;
+// Reserve quota in scheduled detail runs so evening live games still get data.
+const DETAIL_RESERVE = 30;
 // Cap featured matches per run so a busy day can't queue hundreds of calls.
 const MAX_FEATURED = 30;
+// In the frequent live run, refresh events/stats for at most this many live games.
+const LIVE_DETAIL_CAP = 5;
+// Per-team history files emitted for featured teams (one API call each).
+const TEAM_CAP = 12;
 
 // --- tiny HTTP layer with quota tracking -----------------------------------
 
 let dailyRemaining = Infinity;
 const stats = { calls: 0 };
 
-function canSpend() {
-  return dailyRemaining > MIN_REMAINING;
+function canSpend(reserve = MIN_REMAINING) {
+  return dailyRemaining > reserve;
 }
 
 async function api(path, params = {}) {
@@ -205,7 +211,7 @@ async function fetchFixturesForDate(date) {
 // fall back to the most recent season that actually has data.
 function seasonCandidates(season) {
   if (!season) return [];
-  return [season, season - 1, season - 2];
+  return [season, season - 1]; // current, then last completed (off-season)
 }
 
 async function fetchStandings(seasonByLeague) {
@@ -242,7 +248,7 @@ async function fetchTopScorers(seasonByLeague) {
         const rows = await api("/players/topscorers", { league: leagueId, season: s });
         if (rows.length) { chosen = s; scorers = rows.map(slimScorer); break; }
       }
-      if (!scorers.length) return; // no player coverage for this league
+      // Always write (even empty) so the client gets a 200, not a 404.
       await save(`topscorers-${leagueId}.json`, {
         updatedAt: new Date().toISOString(), leagueId, season: chosen, scorers,
       });
@@ -268,7 +274,7 @@ function selectFeatured(todayFixtures = [], liveFixtures = []) {
   return ordered.slice(0, MAX_FEATURED);
 }
 
-async function fetchFixtureDetail(fixture, liveIds) {
+async function fetchFixtureDetail(fixture, liveIds, reserve = MIN_REMAINING) {
   const id = fixture.id;
   const existing = (await readData(`detail-${id}.json`)) || {};
   const out = { fixtureId: id, updatedAt: new Date().toISOString(), fixture, ...existing };
@@ -281,17 +287,17 @@ async function fetchFixtureDetail(fixture, liveIds) {
   const started = isLive || isDone;
 
   // events + statistics: refresh while live; fetch once when finished.
-  if (started && canSpend() && (isLive || !existing.events))
+  if (started && canSpend(reserve) && (isLive || !existing.events))
     await task(`events ${id}`, async () => { out.events = (await api("/fixtures/events", { fixture: id })).map(slimEvent); });
-  if (started && canSpend() && (isLive || !existing.statistics))
+  if (started && canSpend(reserve) && (isLive || !existing.statistics))
     await task(`stats ${id}`, async () => { out.statistics = (await api("/fixtures/statistics", { fixture: id })).map(slimStats); });
 
   // lineups: static once announced — fetch once if we don't have them.
-  if (canSpend() && (!existing.lineups || existing.lineups.length === 0))
+  if (canSpend(reserve) && (!existing.lineups || existing.lineups.length === 0))
     await task(`lineups ${id}`, async () => { out.lineups = (await api("/fixtures/lineups", { fixture: id })).map(slimLineup); });
 
   // predictions: useful pre-match — fetch once.
-  if (!isDone && canSpend() && !existing.prediction)
+  if (!isDone && canSpend(reserve) && !existing.prediction)
     await task(`prediction ${id}`, async () => {
       const p = (await api("/predictions", { fixture: id }))[0];
       if (p) out.prediction = slimPrediction(p);
@@ -300,16 +306,47 @@ async function fetchFixtureDetail(fixture, liveIds) {
   await save(`detail-${id}.json`, out);
 }
 
-async function fetchDetails(featured, liveFixtures) {
+async function fetchDetails(featured, liveFixtures, reserve = MIN_REMAINING) {
   const liveIds = new Set(liveFixtures.map((f) => f.id));
   let done = 0;
   for (const f of featured) {
-    if (!canSpend()) { console.warn(`  details: quota low (${dailyRemaining}), stopping after ${done}`); break; }
-    await fetchFixtureDetail(f, liveIds);
+    if (!canSpend(reserve)) { console.warn(`  details: quota low (${dailyRemaining}), stopping after ${done}`); break; }
+    await fetchFixtureDetail(f, liveIds, reserve);
     done++;
   }
   console.log(`  fetched detail for ${done}/${featured.length} featured matches`);
   return done;
+}
+
+// Per-team history files for featured teams (one API call each, budget-bounded).
+async function fetchTeams(featured, seasonByLeague) {
+  const teams = new Map(); // id -> { team, leagueId }
+  for (const f of featured) {
+    for (const side of ["home", "away"]) {
+      const t = f.teams[side];
+      if (t?.id && !teams.has(t.id)) teams.set(t.id, { team: t, leagueId: f.league.id });
+    }
+    if (teams.size >= TEAM_CAP) break;
+  }
+  let done = 0;
+  for (const { team, leagueId } of teams.values()) {
+    if (!canSpend(DETAIL_RESERVE)) { console.warn(`  teams: quota low (${dailyRemaining}), stopping`); break; }
+    const season = seasonByLeague[leagueId];
+    if (!season) continue;
+    await task(`team ${team.id}`, async () => {
+      const fx = await api("/fixtures", { team: team.id, season });
+      const slim = fx.map(slimFixture);
+      const results = slim.filter((x) => DONE_SHORT.has(x.status?.short)).sort((a, b) => b.timestamp - a.timestamp).slice(0, 15);
+      const upcoming = slim.filter((x) => x.status?.short === "NS").sort((a, b) => a.timestamp - b.timestamp).slice(0, 10);
+      await save(`team-${team.id}.json`, {
+        teamId: team.id, updatedAt: new Date().toISOString(),
+        team: { id: team.id, name: team.name, logo: team.logo },
+        season, results, upcoming,
+      });
+    });
+    done++;
+  }
+  console.log(`  wrote ${done} team files`);
 }
 
 // --- entry ------------------------------------------------------------------
@@ -324,13 +361,17 @@ async function main() {
 
   if (MODE === "live") {
     live = await task("live", fetchLive) || [];
+    // Refresh events/stats for a few in-play priority games so timelines aren't
+    // stuck behind the 2-hourly detail run. Reserved so it can't drain the day.
+    const liveFeatured = live.filter((f) => PRIORITY_SET.has(f.league.id)).slice(0, LIVE_DETAIL_CAP);
+    if (liveFeatured.length) await fetchDetails(liveFeatured, live, DETAIL_RESERVE);
   } else if (MODE === "detail") {
-    // Refresh live scores, then spend remaining quota on featured detail.
+    // Refresh live scores, then spend reserved quota on featured detail.
     live = await task("live", fetchLive) || [];
     const todayDoc = await readData(`fixtures-${isoDate(0)}.json`);
     today = todayDoc?.fixtures || [];
     const featured = selectFeatured(today, live);
-    await fetchDetails(featured, live);
+    await fetchDetails(featured, live, DETAIL_RESERVE);
   } else if (MODE === "daily") {
     seasons = await task("leagues", fetchCurrentLeagues) || {};
     for (const off of [-1, 0, 1]) {
@@ -342,6 +383,7 @@ async function main() {
     // pre-match lineups/predictions for today's featured fixtures
     const featured = selectFeatured(today, []);
     await fetchDetails(featured, []);
+    await fetchTeams(featured, seasons);
   } else {
     // "all": everything, quota permitting.
     seasons = await task("leagues", fetchCurrentLeagues) || {};
@@ -354,6 +396,7 @@ async function main() {
     await fetchTopScorers(seasons);
     const featured = selectFeatured(today, live);
     await fetchDetails(featured, live);
+    await fetchTeams(featured, seasons);
   }
 
   const meta = {

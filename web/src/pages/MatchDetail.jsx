@@ -11,20 +11,23 @@ export default function MatchDetail() {
   const [detail, setDetail] = useState(null);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState("summary");
+  const [tick, setTick] = useState(0); // bumped by the live poller to refetch
 
+  // Reset view when navigating to a different fixture.
   useEffect(() => {
-    let alive = true;
     setLoading(true);
     setMatch(null);
     setDetail(null);
+  }, [fixtureId]);
 
-    async function run() {
-      // Rich detail file (events/lineups/stats/prediction), if the cron made one.
+  // Load (initial + on each poll tick). Does not blank the screen on refresh.
+  useEffect(() => {
+    let alive = true;
+    (async () => {
       let d = null;
       try { d = await getJSON(`detail-${fixtureId}.json`); } catch { /* none yet */ }
       if (d?.fixture && alive) { setDetail(d); setMatch(d.fixture); }
 
-      // Fall back to locating the fixture in the live/day feeds for the header.
       if (!d?.fixture) {
         let meta;
         try { meta = await getJSON("meta.json"); } catch { meta = null; }
@@ -43,11 +46,18 @@ export default function MatchDetail() {
         }
       }
       if (alive) setLoading(false);
-    }
-
-    run();
+    })();
     return () => { alive = false; };
-  }, [fixtureId]);
+  }, [fixtureId, tick]);
+
+  // While the match is live, refetch every 45s so score/minute/events stay fresh.
+  useEffect(() => {
+    if (!match) return;
+    const p = phase(match.status);
+    if (p !== "live" && p !== "ht") return;
+    const t = setInterval(() => setTick((x) => x + 1), 45000);
+    return () => clearInterval(t);
+  }, [match]);
 
   if (loading) return <div className="page"><div className="muted">Loading…</div></div>;
   if (!match)
@@ -79,10 +89,10 @@ export default function MatchDetail() {
       </div>
 
       <div className="md-score">
-        <div className="md-team">
+        <Link className="md-team" to={`/team/${match.teams.home.id}`}>
           <img src={match.teams.home.logo} alt="" />
           <span>{match.teams.home.name}</span>
-        </div>
+        </Link>
         <div className="md-center">
           {started ? (
             <div className="md-goals">{match.goals.home ?? 0} <span>–</span> {match.goals.away ?? 0}</div>
@@ -91,10 +101,10 @@ export default function MatchDetail() {
           )}
           <div className={`md-status ${p}`}>{statusLabel(match.status) || match.status.long}</div>
         </div>
-        <div className="md-team">
+        <Link className="md-team" to={`/team/${match.teams.away.id}`}>
           <img src={match.teams.away.logo} alt="" />
           <span>{match.teams.away.name}</span>
-        </div>
+        </Link>
       </div>
 
       {(has.events || has.lineups || has.stats || has.prediction) && (

@@ -21,17 +21,25 @@ export default function Home() {
 
   const isToday = activeDate && dates && activeDate === dates.today;
 
-  const liveGroups = useMemo(() => {
+  const liveFixtures = useMemo(() => {
     const fx = live.data?.fixtures || [];
-    return groupByLeague(fx, priority);
-  }, [live.data, priority]);
+    return fx.filter((f) => {
+      const p = phase(f.status);
+      return p === "live" || p === "ht";
+    });
+  }, [live.data]);
+
+  const liveGroups = useMemo(
+    () => groupByLeague(liveFixtures, priority),
+    [liveFixtures, priority]
+  );
 
   const dayGroups = useMemo(() => {
     if (!day.data?.fixtures) return [];
     return groupByLeague(day.data.fixtures, priority);
   }, [day.data, priority]);
 
-  const liveCount = live.data?.fixtures?.length || 0;
+  const liveCount = liveFixtures.length;
 
   const fullDate = activeDate
     ? new Date(activeDate + "T00:00:00").toLocaleDateString([], {

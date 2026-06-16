@@ -93,6 +93,14 @@ export default function League() {
   const headerCountry = headerLeague?.country;
   const headerFlag = headerLeague?.flag;
 
+  if (!Number.isFinite(leagueId)) {
+    return (
+      <div className="page league-page">
+        <div className="muted">Unknown competition.</div>
+      </div>
+    );
+  }
+
   return (
     <div className="page league-page">
       <header className="league-hero">
@@ -178,7 +186,11 @@ function TableTab({ standings }) {
   return (
     <div className="league-tables">
       {groups.map((table, gi) => (
-        <table className="league-table" key={gi}>
+        <div key={gi}>
+          {groups.length > 1 && table[0]?.group && (
+            <h3 className="standings-group">{table[0].group}</h3>
+          )}
+          <table className="league-table">
           <thead>
             <tr>
               <th className="rank">#</th>
@@ -216,7 +228,8 @@ function TableTab({ standings }) {
               </tr>
             ))}
           </tbody>
-        </table>
+          </table>
+        </div>
       ))}
     </div>
   );

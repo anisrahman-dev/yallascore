@@ -109,6 +109,7 @@ img { display: block; }
 .standings-head { display: flex; align-items: center; gap: 10px; margin: 4px 2px 12px; }
 .standings-head img { width: 26px; height: 26px; object-fit: contain; }
 .standings-head h2 { font-size: 18px; margin: 0; }
+.standings-group { font-size: 13px; font-weight: 700; margin: 14px 2px 6px; color: var(--text); }
 
 .standings { width: 100%; border-collapse: collapse; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; overflow: hidden; margin-bottom: 16px; }
 .standings th, .standings td { padding: 8px 6px; text-align: center; font-size: 13px; }

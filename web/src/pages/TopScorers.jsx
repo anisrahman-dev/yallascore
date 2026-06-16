@@ -5,7 +5,14 @@ export default function TopScorers() {
   const { data: meta } = useData("meta.json");
   const { data: leaguesDoc } = useData("leagues.json", { refreshMs: 3600000 });
   const ids = meta?.priorityLeagues || [];
-  const nameById = new Map((leaguesDoc?.leagues || []).map((l) => [l.id, l.name]));
+  const leagueById = new Map((leaguesDoc?.leagues || []).map((l) => [l.id, l]));
+  const labelFor = (id) => {
+    const l = leagueById.get(id);
+    if (!l) return `League ${id}`;
+    // Disambiguate same-named leagues (e.g. Italy vs Brazil "Serie A").
+    const dupe = (leaguesDoc?.leagues || []).filter((x) => x.name === l.name).length > 1;
+    return dupe && l.country ? `${l.name} (${l.country})` : l.name;
+  };
 
   const [active, setActive] = useState(null);
   const activeId = active ?? ids[0];
@@ -30,13 +37,16 @@ export default function TopScorers() {
       <div className="chip-row">
         {ids.map((id) => (
           <button key={id} className={id === activeId ? "chip active" : "chip"} onClick={() => setActive(id)}>
-            {nameById.get(id) || `League ${id}`}
+            {labelFor(id)}
           </button>
         ))}
       </div>
 
       {!current && <div className="muted">Loading…</div>}
       {current?.error && <div className="muted">No top-scorer data for this competition (free-plan coverage varies by league).</div>}
+      {current?.data && scorers.length === 0 && (
+        <div className="muted">No top-scorer data yet for this competition — it’ll appear after the next data refresh.</div>
+      )}
 
       {scorers.length > 0 && (
         <table className="standings scorers">

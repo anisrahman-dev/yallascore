@@ -57,7 +57,11 @@ export default function Standings() {
       )}
 
       {groups.map((table, gi) => (
-        <table className="standings" key={gi}>
+        <div key={gi}>
+          {groups.length > 1 && table[0]?.group && (
+            <h3 className="standings-group">{table[0].group}</h3>
+          )}
+          <table className="standings">
           <thead>
             <tr>
               <th className="rank">#</th>
@@ -90,7 +94,8 @@ export default function Standings() {
               </tr>
             ))}
           </tbody>
-        </table>
+          </table>
+        </div>
       ))}
     </div>
   );

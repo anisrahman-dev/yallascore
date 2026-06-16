@@ -10,108 +10,107 @@ export default function Team() {
   const teamId = Number(id);
 
   const { data: meta } = useData("meta.json");
-  const [fixtures, setFixtures] = useState(null); // null = loading, [] = loaded
+  const [data, setData] = useState(null); // {team, fixtures} | null=loading
   const [err, setErr] = useState(false);
 
   useEffect(() => {
-    if (!meta) return;
+    if (!Number.isFinite(teamId)) { setErr(true); return; }
     let alive = true;
     const ctrl = new AbortController();
+    setData(null);
+    setErr(false);
 
-    const dates = meta.dates || {};
-    const files = [
-      "live.json",
-      dates.yesterday ? `fixtures-${dates.yesterday}.json` : null,
-      dates.today ? `fixtures-${dates.today}.json` : null,
-      dates.tomorrow ? `fixtures-${dates.tomorrow}.json` : null,
-    ].filter(Boolean);
+    async function run() {
+      // 1) Prefer a per-team file the Action emits (fuller history than 3 days).
+      let teamDoc = null;
+      try { teamDoc = await getJSON(`team-${teamId}.json`, { signal: ctrl.signal }); } catch { /* none */ }
 
-    Promise.all(
-      files.map((f) =>
-        getJSON(f, { signal: ctrl.signal }).catch(() => null)
-      )
-    )
-      .then((results) => {
-        if (!alive) return;
-        // Merge + de-dupe by fixture id.
-        const byId = new Map();
-        for (const r of results) {
-          const arr = r?.fixtures || [];
-          for (const fx of arr) {
-            if (!byId.has(fx.id)) byId.set(fx.id, fx);
-          }
+      // 2) Always also gather the current window (covers today/live even if the
+      //    team file is stale, and is the fallback when there's no team file).
+      const dates = meta?.dates || {};
+      const files = [
+        "live.json",
+        dates.yesterday && `fixtures-${dates.yesterday}.json`,
+        dates.today && `fixtures-${dates.today}.json`,
+        dates.tomorrow && `fixtures-${dates.tomorrow}.json`,
+      ].filter(Boolean);
+      const windowDocs = await Promise.all(
+        files.map((f) => getJSON(f, { signal: ctrl.signal }).catch(() => null))
+      );
+
+      if (!alive) return;
+
+      const byId = new Map();
+      const add = (arr) => {
+        for (const fx of arr || []) {
+          const mine = fx?.teams?.home?.id === teamId || fx?.teams?.away?.id === teamId;
+          if (mine && fx.id != null) byId.set(fx.id, fx); // window overrides stale team file
         }
-        const mine = [...byId.values()].filter(
-          (fx) =>
-            fx.teams?.home?.id === teamId || fx.teams?.away?.id === teamId
-        );
-        setFixtures(mine);
-      })
-      .catch(() => {
-        if (alive) setErr(true);
-      });
+      };
+      add(teamDoc?.results);
+      add(teamDoc?.upcoming);
+      for (const d of windowDocs) add(d?.fixtures);
 
-    return () => {
-      alive = false;
-      ctrl.abort();
-    };
+      const fixtures = [...byId.values()];
+      const team =
+        teamDoc?.team ||
+        (fixtures[0] &&
+          (fixtures[0].teams.home.id === teamId
+            ? fixtures[0].teams.home
+            : fixtures[0].teams.away)) ||
+        null;
+
+      setData({ team, fixtures });
+    }
+
+    run().catch(() => alive && setErr(true));
+    return () => { alive = false; ctrl.abort(); };
   }, [meta, teamId]);
 
-  const team = useMemo(() => {
-    if (!fixtures || !fixtures.length) return null;
-    const f = fixtures[0];
-    return f.teams.home.id === teamId ? f.teams.home : f.teams.away;
-  }, [fixtures, teamId]);
+  const fixtures = data?.fixtures || [];
 
   const { results, upcoming } = useMemo(() => {
-    const r = [];
-    const u = [];
-    for (const f of fixtures || []) {
+    const r = [], u = [];
+    for (const f of fixtures) {
       if (phase(f.status) === "finished") r.push(f);
       else u.push(f);
     }
-    r.sort((a, b) => a.timestamp - b.timestamp);
-    u.sort((a, b) => a.timestamp - b.timestamp);
+    r.sort((a, b) => b.timestamp - a.timestamp); // newest result first
+    u.sort((a, b) => a.timestamp - b.timestamp); // soonest upcoming first
     return { results: r, upcoming: u };
   }, [fixtures]);
 
   const form = useMemo(() => {
-    // Last up to 5 finished results, most recent last visually -> compute then slice.
-    const finished = (fixtures || [])
-      .filter((f) => phase(f.status) === "finished")
-      .sort((a, b) => a.timestamp - b.timestamp)
-      .slice(-5);
-    return finished.map((f) => {
-      const isHome = f.teams.home.id === teamId;
-      const gf = isHome ? f.goals.home : f.goals.away;
-      const ga = isHome ? f.goals.away : f.goals.home;
-      let r = "d";
-      if (gf > ga) r = "w";
-      else if (gf < ga) r = "l";
-      return { id: f.id, r };
-    });
-  }, [fixtures, teamId]);
+    return results
+      .filter((f) => f.goals?.home != null && f.goals?.away != null) // skip unplayed
+      .slice(0, 5) // most recent 5 (results already newest-first)
+      .reverse() // display oldest→newest
+      .map((f) => {
+        const isHome = f.teams.home.id === teamId;
+        const gf = isHome ? f.goals.home : f.goals.away;
+        const ga = isHome ? f.goals.away : f.goals.home;
+        return { id: f.id, r: gf > ga ? "w" : gf < ga ? "l" : "d" };
+      });
+  }, [results, teamId]);
 
-  if (!meta || fixtures === null) {
-    return (
-      <div className="page team-page">
-        <div className="muted">Loading…</div>
-      </div>
-    );
+  if (!meta && !err) {
+    return <div className="page team-page"><div className="muted">Loading…</div></div>;
   }
-
-  if (err || !team) {
+  if (data === null && !err) {
+    return <div className="page team-page"><div className="muted">Loading…</div></div>;
+  }
+  if (err || !data?.team) {
     return (
       <div className="page team-page">
         <div className="team-empty">
-          No matches found for this team in the current window.
-          <div className="team-empty-sub">
-            <Link to="/">Back to matches</Link>
-          </div>
+          No recent matches found for this team.
+          <div className="team-empty-sub"><Link to="/">Back to matches</Link></div>
         </div>
       </div>
     );
   }
+
+  const team = data.team;
 
   return (
     <div className="page team-page">
@@ -125,38 +124,32 @@ export default function Team() {
           <span className="team-form-label">Form</span>
           <div className="team-form-pills">
             {form.map((p) => (
-              <span key={p.id} className={`team-pill ${p.r}`}>
-                {p.r.toUpperCase()}
-              </span>
+              <span key={p.id} className={`team-pill ${p.r}`}>{p.r.toUpperCase()}</span>
             ))}
           </div>
         </div>
-      )}
-
-      {results.length > 0 && (
-        <section className="team-section">
-          <h3 className="team-section-title">Results</h3>
-          <div className="match-list">
-            {results.map((f) => (
-              <MatchRow key={f.id} f={f} />
-            ))}
-          </div>
-        </section>
       )}
 
       {upcoming.length > 0 && (
         <section className="team-section">
           <h3 className="team-section-title">Upcoming</h3>
           <div className="match-list">
-            {upcoming.map((f) => (
-              <MatchRow key={f.id} f={f} />
-            ))}
+            {upcoming.map((f) => <MatchRow key={f.id} f={f} />)}
+          </div>
+        </section>
+      )}
+
+      {results.length > 0 && (
+        <section className="team-section">
+          <h3 className="team-section-title">Results</h3>
+          <div className="match-list">
+            {results.map((f) => <MatchRow key={f.id} f={f} />)}
           </div>
         </section>
       )}
 
       {results.length === 0 && upcoming.length === 0 && (
-        <div className="team-empty">No matches in the current window.</div>
+        <div className="team-empty">No matches available for this team yet.</div>
       )}
     </div>
   );
