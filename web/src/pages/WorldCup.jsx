@@ -4,6 +4,7 @@ import { useData } from "../api.js";
 import { phase, statusLabel, kickoff } from "../util.js";
 import "./WorldCup.css";
 
+const WORLD_CUP_ID = 1;
 const dateKey = (iso) => (iso || "").slice(0, 10);
 const fmtDay = (iso) =>
   new Date(iso + "T00:00:00").toLocaleDateString([], {
@@ -13,21 +14,33 @@ const fmtDay = (iso) =>
   });
 
 export default function WorldCup() {
+  const meta = useData("meta.json", { refreshMs: 300000 });
+  const dates = meta.data?.dates;
   const wc = useData("worldcup.json", { refreshMs: 120000 });
   const live = useData("live.json", { refreshMs: 60000 });
+  // The daily fixture files already contain World Cup matches — read them too so
+  // we show real data even before worldcup.json (the full schedule) exists.
+  const dy = useData(dates ? `fixtures-${dates.yesterday}.json` : "meta.json", { refreshMs: 120000 });
+  const dt = useData(dates ? `fixtures-${dates.today}.json` : "meta.json", { refreshMs: 90000 });
+  const dm = useData(dates ? `fixtures-${dates.tomorrow}.json` : "meta.json", { refreshMs: 120000 });
+
   const [filter, setFilter] = useState("all"); // all | today | live
 
-  const liveById = useMemo(() => {
-    const m = new Map();
-    for (const f of live.data?.fixtures || []) m.set(f.id, f);
-    return m;
-  }, [live.data]);
-
-  // Full schedule with in-play scores/status overlaid from live.json.
+  // Merge full schedule + daily files (filtered to the World Cup), then overlay
+  // in-play scores/status from live.json. Dedupe by fixture id.
   const fixtures = useMemo(() => {
-    const base = wc.data?.fixtures || [];
-    return base.map((f) => liveById.get(f.id) || f);
-  }, [wc.data, liveById]);
+    const byId = new Map();
+    for (const f of wc.data?.fixtures || []) byId.set(f.id, f);
+    for (const doc of [dy.data, dt.data, dm.data]) {
+      for (const f of doc?.fixtures || []) {
+        if (f?.league?.id === WORLD_CUP_ID) byId.set(f.id, f);
+      }
+    }
+    for (const f of live.data?.fixtures || []) {
+      if (f?.league?.id === WORLD_CUP_ID || byId.has(f.id)) byId.set(f.id, f); // live overlay wins
+    }
+    return [...byId.values()];
+  }, [wc.data, dy.data, dt.data, dm.data, live.data]);
 
   const isLive = (f) => {
     const p = phase(f.status);
@@ -55,7 +68,8 @@ export default function WorldCup() {
   }, [filtered]);
 
   const season = wc.data?.season || 2026;
-  const hasData = !!wc.data && fixtures.length > 0;
+  const hasData = fixtures.length > 0;
+  const loading = (meta.loading || dt.loading || wc.loading) && !hasData;
 
   return (
     <div className="wc">
@@ -91,10 +105,10 @@ export default function WorldCup() {
         ))}
       </div>
 
-      {wc.loading && <div className="muted">Loading schedule…</div>}
-      {!wc.loading && !hasData && (
+      {loading && <div className="muted">Loading schedule…</div>}
+      {!loading && !hasData && (
         <div className="wc-empty">
-          ⚽ The World Cup schedule will appear after the next data refresh.
+          ⚽ No World Cup matches in the current window yet — check back soon.
         </div>
       )}
       {hasData && groups.length === 0 && (

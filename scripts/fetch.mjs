@@ -408,6 +408,7 @@ async function main() {
     await fetchWorldCup(null);
   } else if (MODE === "daily") {
     seasons = await task("leagues", fetchCurrentLeagues) || {};
+    await fetchWorldCup(seasons); // centerpiece — fetch before quota is spent
     for (const off of [-1, 0, 1]) {
       const fx = await task(`fixtures ${off}`, () => fetchFixturesForDate(isoDate(off)));
       if (off === 0) today = fx || [];
@@ -418,11 +419,11 @@ async function main() {
     const featured = selectFeatured(today, []);
     await fetchDetails(featured, []);
     await fetchTeams(featured, seasons);
-    await fetchWorldCup(seasons);
   } else {
     // "all": everything, quota permitting.
     seasons = await task("leagues", fetchCurrentLeagues) || {};
     live = await task("live", fetchLive) || [];
+    await fetchWorldCup(seasons); // centerpiece — fetch before quota is spent
     for (const off of [-1, 0, 1]) {
       const fx = await task(`fixtures ${off}`, () => fetchFixturesForDate(isoDate(off)));
       if (off === 0) today = fx || [];
@@ -432,7 +433,6 @@ async function main() {
     const featured = selectFeatured(today, live);
     await fetchDetails(featured, live);
     await fetchTeams(featured, seasons);
-    await fetchWorldCup(seasons);
   }
 
   const meta = {
